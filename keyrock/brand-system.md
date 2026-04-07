@@ -125,7 +125,7 @@ Located in `~/.claude/keyrock/assets/`:
 
 - **Default text:** "Source: Keyrock Research"
 - User may override with a specific source string
-- **Position:** Bottom-right of the figure (`x=0.98, y=0.02, ha='right'`)
+- **Position:** Bottom-left of the figure (`x=0.02, y=0.02, ha='left'`)
 - **Format:** 9px, Regular, `#9B9B9B` (TEXT_MUTED)
 - Encouraged by default; user can request omission
 
@@ -188,16 +188,16 @@ Charts should breathe. Every element (title, subtitle, chart area, source, logo)
 
 | Zone | Y range | Contents |
 |---|---|---|
-| Title block | 0.92–0.97 | Title (top-left) + optional subtitle |
+| Title block | 0.92–0.97 | Title (centred) + optional subtitle |
 | Chart area (no subtitle) | 0.08–0.91 | Axes, gridlines, legend, data |
 | Chart area (with subtitle) | 0.08–0.87 | Axes, gridlines, legend, data |
-| Source + logo | 0.00–0.08 | Source line (bottom-right), logo (bottom-right) |
+| Source + logo | 0.00–0.08 | Source line (bottom-left), logo (bottom-right) |
 
 ### Key Spacing Values
 
-- **Title:** `fig.text(0.02, 0.965, ..., ha='left', va='top')` — 3.5% from top, left-aligned
-- **Subtitle:** `fig.text(0.02, 0.925, ..., ha='left', va='top')` — snug under title
-- **Source:** `fig.text(0.98, 0.02, ..., ha='right', va='bottom')` — bottom-right
+- **Title:** `fig.text(0.5, 0.965, ..., ha='center', va='top')` — 3.5% from top, centred
+- **Subtitle:** `fig.text(0.5, 0.925, ..., ha='center', va='top')` — snug under title, centred
+- **Source:** `fig.text(0.02, 0.02, ..., ha='left', va='bottom')` — bottom-left
 - **Chart rect (no subtitle):** `tight_layout(rect=[0.01, 0.08, 0.99, 0.91])`
 - **Chart rect (with subtitle):** `tight_layout(rect=[0.01, 0.08, 0.99, 0.87])`
 
@@ -467,19 +467,19 @@ def layout_chart(fig, title, subtitle=None, source='Source: Keyrock Research'):
     Call AFTER all chart content is drawn, BEFORE add_keyrock_logo() and export_chart().
     Replaces manual title, source, and tight_layout calls.
     """
-    # Title — top-left, generous padding from top edge
-    fig.text(0.02, 0.965, title, fontsize=22, weight='bold',
-             color=TEXT_PRIMARY, ha='left', va='top')
+    # Title — centred, generous padding from top edge
+    fig.text(0.5, 0.965, title, fontsize=22, weight='bold',
+             color=TEXT_PRIMARY, ha='center', va='top')
     
-    # Subtitle — snug under title, muted
+    # Subtitle — centred, snug under title, muted
     if subtitle:
-        fig.text(0.02, 0.925, subtitle, fontsize=11, color=TEXT_MUTED,
-                 ha='left', va='top')
+        fig.text(0.5, 0.925, subtitle, fontsize=11, color=TEXT_MUTED,
+                 ha='center', va='top')
     
-    # Source — bottom-right, small
+    # Source — bottom-left (logo occupies bottom-right)
     if source:
-        fig.text(0.98, 0.02, source, fontsize=9, color=TEXT_MUTED,
-                 ha='right', va='bottom')
+        fig.text(0.02, 0.02, source, fontsize=9, color=TEXT_MUTED,
+                 ha='left', va='bottom')
     
     # Chart area — generous margins; more top room when subtitle present
     top = 0.87 if subtitle else 0.91
