@@ -70,13 +70,13 @@ For contexts where directional colour is essential (waterfall charts, KPI trend 
 
 | Element | Size | Weight | Colour |
 |---|---|---|---|
-| Title | 18px | Bold | `#1F1F1F` (TEXT_PRIMARY) |
-| Subtitle | 12px | Regular | `#1F1F1F` (TEXT_PRIMARY) |
+| Title | 22px | Bold | `#1F1F1F` (TEXT_PRIMARY) |
+| Subtitle | 11px | Regular | `#9B9B9B` (TEXT_MUTED) |
 | Axis labels | 12px | Bold | `#1F1F1F` (TEXT_PRIMARY) |
 | Tick labels | 10px | Regular | `#9B9B9B` (both X and Y axis) |
 | Legend | 12px | Bold | `#1F1F1F` (TEXT_PRIMARY) |
 | Data labels / Annotations | 12px | Bold | Series colour, or `#FF7800` / `#3867FF` / `#A580FF` |
-| Source line | 8px | Regular | `#1F1F1F` (TEXT_PRIMARY) |
+| Source line | 9px | Regular | `#9B9B9B` (TEXT_MUTED) |
 
 ### Font Stack
 
@@ -125,8 +125,8 @@ Located in `~/.claude/keyrock/assets/`:
 
 - **Default text:** "Source: Keyrock Research"
 - User may override with a specific source string
-- **Position:** Far-left of the chart (x=0.01), bottom
-- **Format:** 8px, Regular, `#1F1F1F` (TEXT_PRIMARY)
+- **Position:** Bottom-right of the figure (`x=0.98, y=0.02, ha='right'`)
+- **Format:** 9px, Regular, `#9B9B9B` (TEXT_MUTED)
 - Encouraged by default; user can request omission
 
 ---
@@ -180,12 +180,26 @@ Colours are assigned in this strict priority order:
 
 ## 8. Layout Rules
 
-### Margins and Spacing
+### Spacing Philosophy
 
-- Margins: Generous but not wasteful
-- Title padding: 15–20px above chart area
-- Logo clear space: At least 10px from chart edges
-- Source line: Below chart area, left-aligned
+Charts should breathe. Every element (title, subtitle, chart area, source, logo) needs clear separation. The layout uses figure-level coordinates so spacing is consistent regardless of axes content.
+
+### Layout Zones (figure-relative, 0–1 coordinates)
+
+| Zone | Y range | Contents |
+|---|---|---|
+| Title block | 0.92–0.97 | Title (top-left) + optional subtitle |
+| Chart area (no subtitle) | 0.08–0.91 | Axes, gridlines, legend, data |
+| Chart area (with subtitle) | 0.08–0.87 | Axes, gridlines, legend, data |
+| Source + logo | 0.00–0.08 | Source line (bottom-right), logo (bottom-right) |
+
+### Key Spacing Values
+
+- **Title:** `fig.text(0.02, 0.965, ..., ha='left', va='top')` — 3.5% from top, left-aligned
+- **Subtitle:** `fig.text(0.02, 0.925, ..., ha='left', va='top')` — snug under title
+- **Source:** `fig.text(0.98, 0.02, ..., ha='right', va='bottom')` — bottom-right
+- **Chart rect (no subtitle):** `tight_layout(rect=[0.01, 0.08, 0.99, 0.91])`
+- **Chart rect (with subtitle):** `tight_layout(rect=[0.01, 0.08, 0.99, 0.87])`
 
 ### Legend
 
@@ -436,6 +450,56 @@ def export_chart(fig, name, output_dir='.', dpi=250, formats=('svg', 'png', 'pdf
                     facecolor=fig.get_facecolor(), edgecolor='none',
                     format=fmt)
     plt.close(fig)
+```
+
+---
+
+---
+
+## 16. Chart Layout Helper (matplotlib)
+
+This function replaces manual `ax.set_title()` / `fig.suptitle()` / `fig.text(source)` / `plt.tight_layout()` calls. It positions the title, subtitle, and source at figure level for consistent spacing across all chart types.
+
+```python
+def layout_chart(fig, title, subtitle=None, source='Source: Keyrock Research'):
+    """Apply Keyrock chart layout with consistent spacing.
+    
+    Call AFTER all chart content is drawn, BEFORE add_keyrock_logo() and export_chart().
+    Replaces manual title, source, and tight_layout calls.
+    """
+    # Title — top-left, generous padding from top edge
+    fig.text(0.02, 0.965, title, fontsize=22, weight='bold',
+             color=TEXT_PRIMARY, ha='left', va='top')
+    
+    # Subtitle — snug under title, muted
+    if subtitle:
+        fig.text(0.02, 0.925, subtitle, fontsize=11, color=TEXT_MUTED,
+                 ha='left', va='top')
+    
+    # Source — bottom-right, small
+    if source:
+        fig.text(0.98, 0.02, source, fontsize=9, color=TEXT_MUTED,
+                 ha='right', va='bottom')
+    
+    # Chart area — generous margins; more top room when subtitle present
+    top = 0.87 if subtitle else 0.91
+    plt.tight_layout(rect=[0.01, 0.08, 0.99, top])
+```
+
+**Usage in templates:**
+```python
+# Instead of:
+#   ax.set_title('My Title', fontsize=22, ...)
+#   fig.text(0.01, 0.02, 'Source: ...', fontsize=10, ...)
+#   plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+
+# Use:
+layout_chart(fig, 'My Title', source='Source: Keyrock Research')
+# or with subtitle:
+layout_chart(fig, 'My Title', subtitle='Additional context', source='Source: Keyrock Research')
+
+add_keyrock_logo(fig)
+export_chart(fig, 'chart_name')
 ```
 
 ---

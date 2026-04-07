@@ -31,8 +31,7 @@
 19. [Sankey Diagram](#19-sankey-diagram)
 
 ### Shared Conventions
-- [Title Patterns](#title-patterns)
-- [Source Lines](#source-lines)
+- [Title, Source, and Layout](#title-source-and-layout--use-layout_chart)
 - [Number Formatting](#number-formatting)
 - [Grid and Spine Rules](#grid-and-spine-rules)
 - [Legend Patterns](#legend-patterns)
@@ -43,21 +42,22 @@
 
 ## Shared Conventions
 
-### Title Patterns
+### Title, Source, and Layout — use `layout_chart()`
+
+All charts use the `layout_chart()` helper (defined in `brand-system.md` section 16) for consistent spacing. It handles title, subtitle, source, and `tight_layout` in one call. Do NOT use `ax.set_title()`, `fig.suptitle()`, or manual `fig.text()` for source lines.
 
 ```python
-# Single title
-ax.set_title('Chart Title Here', fontsize=22, color=TEXT_PRIMARY, weight='bold', pad=20, loc='center')
+# Title only (most charts)
+layout_chart(fig, 'Chart Title Here')
 
 # Title + subtitle
-fig.suptitle('Main Title', fontsize=22, weight='bold', color=TEXT_PRIMARY, y=0.98)
-ax.set_title('Subtitle text here', fontsize=12, color=TEXT_PRIMARY, pad=10)
-```
+layout_chart(fig, 'Main Title', subtitle='Subtitle text here')
 
-### Source Lines
+# Custom source
+layout_chart(fig, 'Chart Title', source='Source: CoinGecko, Keyrock Research')
 
-```python
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
+# No source line
+layout_chart(fig, 'Chart Title', source=None)
 ```
 
 ### Number Formatting
@@ -224,16 +224,12 @@ for bar in bars:
             fontsize=12, color=TEXT_PRIMARY, weight='bold')
 
 # --- Styling ---
-ax.set_title('24h Trading Volume by Asset', fontsize=22, color=TEXT_PRIMARY,
-             weight='bold', pad=20, loc='center')
 ax.set_ylabel('Volume (USD)', fontsize=12, color=TEXT_PRIMARY, weight='bold')
 style_axes(ax)
 ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: format_number(x)))
 
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, '24h Trading Volume by Asset')
 add_keyrock_logo(fig)
 export_chart(fig, 'vertical_bar_single')
 ```
@@ -269,8 +265,6 @@ for i, (label, vals) in enumerate(data.items()):
                   color=CHART_COLORS[i], edgecolor='none', zorder=3)
 
 # --- Styling ---
-ax.set_title('Quarterly Trading Volume by Venue Type', fontsize=22,
-             color=TEXT_PRIMARY, weight='bold', pad=20, loc='center')
 ax.set_xticks(x)
 ax.set_xticklabels(categories)
 ax.set_ylabel('Volume (USD)', fontsize=12, color=TEXT_PRIMARY, weight='bold')
@@ -278,10 +272,8 @@ style_axes(ax)
 ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: format_number(x)))
 ax.legend(loc='upper left', framealpha=0.8, edgecolor='none', facecolor=BG, fontsize=12, prop={'weight': 'bold'})
 
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, 'Quarterly Trading Volume by Venue Type')
 add_keyrock_logo(fig)
 export_chart(fig, 'vertical_bar_grouped')
 ```
@@ -345,8 +337,6 @@ for bar in bars:
             fontsize=12, color=TEXT_PRIMARY, weight='bold')
 
 # --- Styling ---
-ax.set_title('24h Spot Volume by Exchange', fontsize=22, color=TEXT_PRIMARY,
-             weight='bold', pad=20, loc='center')
 ax.set_xlabel('Volume (USD)', fontsize=12, color=TEXT_PRIMARY, weight='bold')
 style_axes(ax, grid_axis='x')
 ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: format_number(x)))
@@ -354,10 +344,8 @@ ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: format_number(x)))
 # Expand x-axis for label room
 ax.set_xlim(0, max(values) * 1.15)
 
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, '24h Spot Volume by Exchange')
 add_keyrock_logo(fig)
 export_chart(fig, 'horizontal_bar_single')
 ```
@@ -397,8 +385,6 @@ for i, (label, vals) in enumerate(data.items()):
             color=CHART_COLORS[i], edgecolor='none', zorder=3)
 
 # --- Styling ---
-ax.set_title('Exchange Volume: Spot vs Derivatives', fontsize=22,
-             color=TEXT_PRIMARY, weight='bold', pad=20, loc='center')
 ax.set_yticks(y)
 ax.set_yticklabels(categories)
 ax.set_xlabel('Volume (USD)', fontsize=12, color=TEXT_PRIMARY, weight='bold')
@@ -406,10 +392,8 @@ style_axes(ax, grid_axis='x')
 ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: format_number(x)))
 ax.legend(loc='lower right', framealpha=0.8, edgecolor='none', facecolor=BG, fontsize=12, prop={'weight': 'bold'})
 
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, 'Exchange Volume: Spot vs Derivatives')
 add_keyrock_logo(fig)
 export_chart(fig, 'horizontal_bar_grouped')
 ```
@@ -475,18 +459,14 @@ for j, total in enumerate(totals):
             ha='center', va='bottom', fontsize=12, color=TEXT_PRIMARY, weight='bold')
 
 # --- Styling ---
-ax.set_title('Crypto Market Capitalisation by Segment', fontsize=22,
-             color=TEXT_PRIMARY, weight='bold', pad=20, loc='center')
 ax.set_ylabel('Market Cap (USD)', fontsize=12, color=TEXT_PRIMARY, weight='bold')
 style_axes(ax)
 ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: format_number(x)))
 ax.legend(loc='upper left', framealpha=0.8, edgecolor='none', facecolor=BG,
           fontsize=12, ncol=3, prop={'weight': 'bold'})
 
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, 'Crypto Market Capitalisation by Segment')
 add_keyrock_logo(fig)
 export_chart(fig, 'stacked_bar_vertical')
 ```
@@ -531,18 +511,14 @@ for i, (segment, row) in enumerate(zip(segments, data)):
     left += row
 
 # --- Styling ---
-ax.set_title('Portfolio Allocation Comparison', fontsize=22,
-             color=TEXT_PRIMARY, weight='bold', pad=20, loc='center')
 ax.set_xlabel('Allocation (%)', fontsize=12, color=TEXT_PRIMARY, weight='bold')
 ax.set_xlim(0, 100)
 style_axes(ax, grid_axis='x')
 ax.legend(loc='lower right', framealpha=0.8, edgecolor='none', facecolor=BG,
           fontsize=12, ncol=2, prop={'weight': 'bold'})
 
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, 'Portfolio Allocation Comparison')
 add_keyrock_logo(fig)
 export_chart(fig, 'stacked_bar_horizontal')
 ```
@@ -607,18 +583,14 @@ ax.annotate(f'${values[-1]:.0f}',
             fontsize=10, color=PRIMARY_DEFAULT, weight='bold')
 
 # --- Styling ---
-ax.set_title('BTC Weekly Price (2024)', fontsize=22, color=TEXT_PRIMARY,
-             weight='bold', pad=20, loc='center')
 ax.set_ylabel('Price (USD)', fontsize=12, color=TEXT_PRIMARY, weight='bold')
 style_axes(ax)
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
 ax.xaxis.set_major_locator(mdates.MonthLocator(interval=2))
 plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
 
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, 'BTC Weekly Price (2024)')
 add_keyrock_logo(fig)
 export_chart(fig, 'line_single')
 ```
@@ -655,8 +627,6 @@ for i, (label, values) in enumerate(series.items()):
                 fontsize=12, color=CHART_COLORS[i], weight='bold')
 
 # --- Styling ---
-ax.set_title('Market Dominance Trends (2024)', fontsize=22, color=TEXT_PRIMARY,
-             weight='bold', pad=20, loc='center')
 ax.set_ylabel('Market Share (%)', fontsize=12, color=TEXT_PRIMARY, weight='bold')
 style_axes(ax)
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
@@ -665,10 +635,8 @@ ax.legend(loc='upper right', framealpha=0.8, edgecolor='none', facecolor=BG, fon
 # Expand x-axis for endpoint labels
 ax.set_xlim(months[0] - timedelta(days=5), months[-1] + timedelta(days=30))
 
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, 'Market Dominance Trends (2024)')
 add_keyrock_logo(fig)
 export_chart(fig, 'line_multi')
 ```
@@ -733,8 +701,6 @@ for i in range(len(labels)):
     ax.plot(months, cumulative[i], color=CHART_COLORS[i], linewidth=1.5, zorder=3)
 
 # --- Styling ---
-ax.set_title('DeFi TVL by Chain (2024)', fontsize=22, color=TEXT_PRIMARY,
-             weight='bold', pad=20, loc='center')
 ax.set_ylabel('TVL (USD Billions)', fontsize=12, color=TEXT_PRIMARY, weight='bold')
 style_axes(ax)
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
@@ -744,10 +710,8 @@ handles, leg_labels = ax.get_legend_handles_labels()
 ax.legend(handles[::-1], leg_labels[::-1], loc='upper left',
           framealpha=0.8, edgecolor='none', facecolor=BG, fontsize=12, prop={'weight': 'bold'})
 
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, 'DeFi TVL by Chain (2024)')
 add_keyrock_logo(fig)
 export_chart(fig, 'area_stacked')
 ```
@@ -822,8 +786,6 @@ for idx, label in zip(notable_indices, notable_labels):
                 arrowprops=dict(arrowstyle='->', color=TEXT_MUTED, lw=0.8))
 
 # --- Styling ---
-ax.set_title('Market Cap vs 24h Volume', fontsize=22, color=TEXT_PRIMARY,
-             weight='bold', pad=20, loc='center')
 ax.set_xlabel('Market Cap (USD)', fontsize=12, color=TEXT_PRIMARY, weight='bold')
 ax.set_ylabel('24h Volume (USD)', fontsize=12, color=TEXT_PRIMARY, weight='bold')
 ax.set_xscale('log')
@@ -831,10 +793,8 @@ ax.set_yscale('log')
 style_axes(ax, grid_axis='both')
 ax.legend(loc='upper left', framealpha=0.8, edgecolor='none', facecolor=BG, fontsize=12, prop={'weight': 'bold'})
 
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, 'Market Cap vs 24h Volume')
 add_keyrock_logo(fig)
 export_chart(fig, 'scatter_plot')
 ```
@@ -901,14 +861,8 @@ for autotext in autotexts:
 ax.text(0, 0, '$92B\nTotal TVL', ha='center', va='center',
         fontsize=16, weight='bold', color=TEXT_PRIMARY)
 
-# --- Title ---
-ax.set_title('DeFi TVL by Chain', fontsize=22, color=TEXT_PRIMARY,
-             weight='bold', pad=30)
-
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, 'DeFi TVL by Chain')
 add_keyrock_logo(fig)
 export_chart(fig, 'donut_chart')
 ```
@@ -989,14 +943,8 @@ cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 cbar.ax.tick_params(labelsize=10, colors=TEXT_PRIMARY)
 cbar.outline.set_visible(False)
 
-# --- Title ---
-ax.set_title('Asset Correlation Matrix (90-Day)', fontsize=22,
-             color=TEXT_PRIMARY, weight='bold', pad=20)
-
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, 'Asset Correlation Matrix (90-Day)')
 add_keyrock_logo(fig)
 export_chart(fig, 'heatmap_correlation')
 ```
@@ -1108,16 +1056,12 @@ for i, bar in enumerate(bars):
             fontsize=12, color=TEXT_PRIMARY, weight='bold')
 
 # --- Styling ---
-ax.set_title('Revenue Bridge: Q4 2024 to Q1 2025', fontsize=22,
-             color=TEXT_PRIMARY, weight='bold', pad=20, loc='center')
 ax.set_ylabel('Revenue (USD Millions)', fontsize=12, color=TEXT_PRIMARY, weight='bold')
 style_axes(ax)
 plt.setp(ax.get_xticklabels(), rotation=30, ha='right')
 
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, 'Revenue Bridge: Q4 2024 to Q1 2025')
 add_keyrock_logo(fig)
 export_chart(fig, 'waterfall')
 ```
@@ -1208,14 +1152,8 @@ line_legend = Line2D([0], [0], color=PRIMARY[4], linewidth=2.5, marker='o', mark
 ax1.legend([bars_legend, line_legend], ['Volume', 'BTC Price'],
            loc='upper left', framealpha=0.8, edgecolor='none', facecolor=BG, fontsize=12, prop={'weight': 'bold'})
 
-# --- Title ---
-ax1.set_title('BTC Volume and Price (2024)', fontsize=22,
-              color=TEXT_PRIMARY, weight='bold', pad=20, loc='center')
-
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, 'BTC Volume and Price (2024)')
 add_keyrock_logo(fig)
 export_chart(fig, 'combo_chart')
 ```
@@ -1341,16 +1279,9 @@ legend_patches = [mpatches.Patch(color=c, label=cat) for cat, c in unique_cats.i
 ax.legend(handles=legend_patches, loc='lower right', framealpha=0.8,
           edgecolor='none', facecolor=BG, fontsize=12, ncol=3, prop={'weight': 'bold'})
 
-# --- Title ---
-fig.suptitle('Global Crypto Regulatory Timeline', fontsize=22,
-             weight='bold', color=TEXT_PRIMARY, y=0.98)
-ax.set_title('Key frameworks and compliance deadlines', fontsize=12,
-             color=TEXT_PRIMARY, pad=10)
-
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.93])
+# --- Layout ---
+layout_chart(fig, 'Global Crypto Regulatory Timeline',
+             subtitle='Key frameworks and compliance deadlines')
 add_keyrock_logo(fig)
 export_chart(fig, 'timeline_gantt')
 ```
@@ -1470,13 +1401,8 @@ for src_id, dst_id, label in connections:
                 bbox=dict(boxstyle='round,pad=0.2', facecolor=BG,
                          edgecolor='none', alpha=0.8))
 
-# --- Title ---
-fig.suptitle('Client Onboarding Process', fontsize=22,
-             weight='bold', color=TEXT_PRIMARY, y=0.96)
-
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
+# --- Layout ---
+layout_chart(fig, 'Client Onboarding Process')
 add_keyrock_logo(fig)
 export_chart(fig, 'flowchart')
 ```
@@ -1579,13 +1505,8 @@ ax.text(0, 0, center_text, ha='center', va='center',
         bbox=dict(boxstyle='round,pad=0.5', facecolor=BG,
                  edgecolor=GRID_COLOR, linewidth=1.5))
 
-# --- Title ---
-fig.suptitle('The Liquidity Flywheel', fontsize=22,
-             weight='bold', color=TEXT_PRIMARY, y=0.96)
-
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
+# --- Layout ---
+layout_chart(fig, 'The Liquidity Flywheel')
 add_keyrock_logo(fig)
 export_chart(fig, 'flywheel')
 ```
@@ -1689,13 +1610,8 @@ for i, y in enumerate(y_positions):
         connectionstyle='arc3,rad=0.15')
     ax.add_patch(arrow)
 
-# --- Title ---
-fig.suptitle('Forces Converging on Institutional Crypto Adoption', fontsize=22,
-             weight='bold', color=TEXT_PRIMARY, y=0.96)
-
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
+# --- Layout ---
+layout_chart(fig, 'Forces Converging on Institutional Crypto Adoption')
 add_keyrock_logo(fig)
 export_chart(fig, 'convergence_diagram')
 ```
@@ -1819,14 +1735,8 @@ for i, row in enumerate(rows):
                     zorder=3)
         x_pos += w
 
-# --- Title ---
-fig.suptitle('Exchange Scorecard', fontsize=22, weight='bold',
-             color=TEXT_PRIMARY, y=0.97)
-
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.93])
+# --- Layout ---
+layout_chart(fig, 'Exchange Scorecard')
 add_keyrock_logo(fig)
 export_chart(fig, 'scorecard')
 ```
@@ -1921,14 +1831,8 @@ for i, (ax, metric) in enumerate(zip(axes, metrics)):
     ax.text(5.2, 2.5, f'{arrow} {metric["change"]}', ha='center', va='center',
             fontsize=12, color=trend_color, weight='bold', zorder=3)
 
-# --- Title ---
-fig.suptitle('Market Making Dashboard', fontsize=22, weight='bold',
-             color=TEXT_PRIMARY, y=1.02)
-
-# --- Source ---
-fig.text(0.01, -0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.02, 1, 0.95])
+# --- Layout ---
+layout_chart(fig, 'Market Making Dashboard')
 add_keyrock_logo(fig)
 export_chart(fig, 'kpi_cards')
 ```
@@ -2057,14 +1961,8 @@ for i, (attr, row) in enumerate(zip(attributes, data)):
             ax.text(x, y + row_h / 2, '\u2014', ha='center', va='center',
                     fontsize=16, color=ACCENT_ORANGE, weight='bold', zorder=1)
 
-# --- Title ---
-fig.suptitle('Market Maker Comparison', fontsize=22, weight='bold',
-             color=TEXT_PRIMARY, y=0.97)
-
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.93])
+# --- Layout ---
+layout_chart(fig, 'Market Maker Comparison')
 add_keyrock_logo(fig)
 export_chart(fig, 'comparison_table')
 ```
@@ -2143,15 +2041,9 @@ ax.set_xlim(0, 12)
 ax.set_ylim(0, 8)
 ax.axis('off')
 
-# --- Title ---
-fig.suptitle('Crypto Market Cap Distribution', fontsize=22, weight='bold',
-             color=TEXT_PRIMARY, y=0.97)
-ax.set_title('Total Market Cap: $1.8T', fontsize=12, color=TEXT_PRIMARY, pad=10)
-
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
-plt.tight_layout(rect=[0, 0.05, 1, 0.93])
+# --- Layout ---
+layout_chart(fig, 'Crypto Market Cap Distribution',
+             subtitle='Total Market Cap: $1.8T')
 add_keyrock_logo(fig)
 export_chart(fig, 'treemap')
 ```
@@ -2305,13 +2197,8 @@ for j, (pos, label, val) in enumerate(zip(dst_pos, destinations, dst_values)):
             f'{label}\n${val}B', ha='left', va='center',
             fontsize=12, color=TEXT_PRIMARY, weight='bold')
 
-# --- Title ---
-fig.suptitle('Trading Volume Flow: Source to Strategy', fontsize=22,
-             weight='bold', color=TEXT_PRIMARY, y=0.97)
-
-# --- Source ---
-fig.text(0.01, 0.02, 'Source: Keyrock Research', fontsize=10, color=TEXT_MUTED)
-
+# --- Layout ---
+layout_chart(fig, 'Trading Volume Flow: Source to Strategy')
 add_keyrock_logo(fig)
 export_chart(fig, 'sankey_diagram')
 ```
@@ -2367,9 +2254,8 @@ Most templates use only `matplotlib` and `numpy` (standard). Special chart types
 2. Top, right, and left spines removed; bottom spine visible (2px, `X_AXIS_COLOR`)
 3. Grid is subtle (`alpha=0.3`, `linewidth=0.5`)
 4. Both X and Y axis tick/label colours use `TICK_COLOR` (`#9B9B9B`)
-5. Title uses `TEXT_PRIMARY`, `weight='bold'`, `fontsize=22-20`
-6. Source line present at bottom left
-7. `add_keyrock_logo(fig)` called
-8. `export_chart(fig, name)` called
-9. `tight_layout` with rect to leave room for source line and logo
-10. All colours come from the brand palette — no hardcoded colours outside the system
+5. `layout_chart(fig, title, ...)` called — handles title, subtitle, source, and `tight_layout`
+6. `add_keyrock_logo(fig)` called after `layout_chart()`
+7. `export_chart(fig, name)` called last
+8. All colours come from the brand palette — no hardcoded colours outside the system
+9. No manual `ax.set_title()`, `fig.suptitle()`, `fig.text(source)`, or `plt.tight_layout()` — `layout_chart()` handles all of these
