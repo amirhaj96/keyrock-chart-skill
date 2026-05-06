@@ -463,42 +463,87 @@ This function replaces manual `ax.set_title()` / `fig.suptitle()` / `fig.text(so
 ```python
 def layout_chart(fig, title, subtitle=None, source='Source: Keyrock Research'):
     """Apply Keyrock chart layout with consistent spacing.
-    
-    Call AFTER all chart content is drawn, BEFORE add_keyrock_logo() and export_chart().
+
+    Call AFTER all chart content is drawn, BEFORE export_chart().
     Replaces manual title, source, and tight_layout calls.
+
+    Single-axis charts only. For small multiples (subplots(N, M)),
+    use layout_chart_small_multiples() — single-axis spacing collides
+    with per-subplot titles.
     """
     # Title — centred, generous padding from top edge
     fig.text(0.5, 0.965, title, fontsize=22, weight='bold',
              color=TEXT_PRIMARY, ha='center', va='top')
-    
+
     # Subtitle — centred, snug under title, muted
     if subtitle:
         fig.text(0.5, 0.925, subtitle, fontsize=11, color=TEXT_MUTED,
                  ha='center', va='top')
-    
-    # Source — bottom-left (logo occupies bottom-right)
+
+    # Source — bottom-left (no logo on Keyrock charts by default)
     if source:
         fig.text(0.02, 0.02, source, fontsize=9, color=TEXT_MUTED,
                  ha='left', va='bottom')
-    
+
     # Chart area — generous margins; more top room when subtitle present
     top = 0.87 if subtitle else 0.91
     plt.tight_layout(rect=[0.01, 0.08, 0.99, top])
+
+
+def layout_chart_small_multiples(fig, title, source='Source: Keyrock Research'):
+    """Apply Keyrock layout for small-multiples charts (subplots(N, M)).
+
+    Each subplot has its own title that eats vertical space INSIDE the panel area.
+    The single-axis layout_chart() defaults (top=0.91) collide with per-subplot
+    titles. This helper uses tighter top/bottom and a smaller figure title.
+
+    Call AFTER fig.subplots_adjust() with top=0.83, bottom=0.13.
+    """
+    # Smaller figure title (16pt vs 22pt) sized for grids
+    fig.text(0.5, 0.94, title, fontsize=16, weight='bold',
+             color=TEXT_PRIMARY, ha='center', va='top')
+
+    # Source — bottom-left, raised slightly (y=0.05 vs 0.02) to clear
+    # x-tick labels of bottom-row subplots
+    if source:
+        fig.text(0.06, 0.05, source, fontsize=9, color=TEXT_MUTED,
+                 style='italic', ha='left', va='bottom')
+
+
+# Recommended subplots_adjust for 2xN small multiples:
+#   fig.subplots_adjust(left=0.06, right=0.98, top=0.83, bottom=0.13,
+#                       hspace=0.50, wspace=0.22)
 ```
+
+### Spacing standards — quick reference
+
+| Context | Title y | Subtitle y | Chart top | Chart bottom | Source y |
+|---|---|---|---|---|---|
+| **Single-axis chart** | 0.965 | 0.925 | 0.91 (no sub) / 0.87 (with sub) | 0.08 | 0.02 |
+| **Small multiples (2xN)** | 0.94 | n/a | 0.83 | 0.13 | 0.05 |
+| **Diagram / infographic** | 0.94 | 0.88 | n/a (manual layout) | n/a | 0.025 |
+
+### Anti-patterns to refuse
+
+- **Title at fig y > 0.97** — leaves a dead band above the chart.
+- **Source at fig y < 0.02** — floats too far below the chart.
+- **Logo on data charts** — Keyrock charts have no logo by default. If a logo is requested, place top-right (Blockworks/Syncracy style), never bottom-right.
+- **Big subtitle gaps** — if subtitle is removed, the chart top must move up.
+- **Single-axis spacing on small multiples** — `top=0.91` collides with per-subplot titles. Use the small-multiples helper instead.
+- **`FancyArrowPatch` for diagram arrowheads of varying lengths** — head sizes render inconsistently. Use manual `Polygon` triangles at fixed dimensions.
 
 **Usage in templates:**
 ```python
-# Instead of:
-#   ax.set_title('My Title', fontsize=22, ...)
-#   fig.text(0.01, 0.02, 'Source: ...', fontsize=10, ...)
-#   plt.tight_layout(rect=[0, 0.05, 1, 0.95])
-
-# Use:
+# Single-axis chart:
 layout_chart(fig, 'My Title', source='Source: Keyrock Research')
-# or with subtitle:
-layout_chart(fig, 'My Title', subtitle='Additional context', source='Source: Keyrock Research')
 
-add_keyrock_logo(fig)
+# Small multiples (e.g., 2x4 grid):
+fig, axs = plt.subplots(2, 4, figsize=(13, 6.6), facecolor=BG)
+fig.subplots_adjust(left=0.06, right=0.98, top=0.83, bottom=0.13,
+                    hspace=0.50, wspace=0.22)
+# ... draw each panel ...
+layout_chart_small_multiples(fig, 'Title', source='Source: ...')
+
 export_chart(fig, 'chart_name')
 ```
 
