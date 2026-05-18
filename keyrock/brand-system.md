@@ -91,6 +91,16 @@ Designer spec is **-10 tracking** for all text. FK Grotesk Neue's natural metric
 
 Bold, punchy headlines are preferred. Keep titles concise and informative.
 
+**Title-as-measurement rule.** A chart title must describe what is actually measured, not gesture at the topic. If the data is one slice of a broader category, the title says so — readers infer scope from the title, and a loose title will be read as a claim about the broader category.
+
+Examples (from the Stablecoin FX project):
+- ✗ "Onchain Non-USD DEX Trading" — implies all non-USD DEX activity (would include same-peg swaps and non-USD ↔ non-USD pairs)
+- ✓ "Onchain Non-USD vs USD-Stablecoin DEX Volume" — specifies the pairing (Measure B: FX corridor only)
+- ✗ "Stablecoin Trading Is Concentrated In The Euro" — ambiguous about which trading
+- ✓ "Non-USD Stablecoin DEX Trading Is Concentrated In The Euro" — adds DEX, distinguishing from CEX layers
+
+When the title declares a number range or trend ("Swings between $X and $Y", "Doubled since 2024"), confirm the data window matches the chart's actual x-axis. Pick declarative over descriptive only when the punchy claim is what the chart actually shows; otherwise descriptive accuracy beats forced punchiness.
+
 ---
 
 ## 3. Logo
