@@ -204,7 +204,33 @@ Charts should breathe. Every element (title, subtitle, chart area, source, logo)
 ### Legend
 
 - 12px, Bold
+- Use **circle markers** for categorical legends: `Line2D([0],[0], marker='o', color='w', markerfacecolor=col, markersize=10, label=r)`. Filled `Patch` rectangles read as bar/area-chart legends and look wrong on scatter plots — use circles when each row maps to a scatter point.
 - Placement varies by chart type (refer to `chart-templates.md` for specifics)
+
+#### Top-of-chart legends: use figure coords, not axes coords
+
+When a categorical legend sits above the axes (the common case for scatter plots with region groups, line charts with series colours, etc.), anchor the legend in **figure coordinates** directly under the title. Do not use `ax.legend(..., bbox_to_anchor=(0.5, 1.02))` — that anchors in axes coordinates just above the axis box and leaves a large empty band between the title and the legend, because `layout_chart` reserves the title block at the figure top with its own inch budget.
+
+**Correct pattern:**
+```python
+# After layout_chart(fig, title, top_extra_inches=0.30) has run:
+H = fig.get_figheight()
+legend_y = 1.0 - (1.05 / H)   # 1.05" below figure top → 0.30" under title baseline
+handles = [Line2D([0],[0], marker='o', color='w', markerfacecolor=c,
+                  markersize=10, label=r) for r, c in REGION_COL.items()]
+fig.legend(handles=handles, loc='center', bbox_to_anchor=(0.5, legend_y),
+           frameon=False, fontsize=11, labelcolor=TEXT_PRIMARY, ncol=5,
+           columnspacing=2.4, handletextpad=0.5)
+```
+
+The 1.05" figure-relative anchor decomposes as: 0.35" top pad + 0.40" title height + 0.30" gap = legend centred 1.05" from figure top. Pair this with `top_extra_inches=0.30` in `layout_chart` so the chart axes start ~1.50" from the top, leaving the legend ~0.45" of breathing room above the chart.
+
+**Anti-pattern (this was the bug fixed 2026-05-18):**
+```python
+# DO NOT do this — leaves the legend floating mid-way between title and chart
+ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.02), ...)
+layout_chart(fig, title, top_extra_inches=0.40)  # legend now sits 0.60"+ below title
+```
 
 ### Aspect Ratios (Context-Adaptive)
 
@@ -564,7 +590,7 @@ Some chart elements protrude beyond the axis box. The helper can't detect them; 
 |---|---|---|
 | Heatmap with rotated column labels at top | `top_extra_inches=0.30` | Column labels sit above the axis box |
 | Chart with rotated x-axis labels | `bottom_extra_inches=0.20` | Date/category labels extend below axis line |
-| Chart with horizontal legend above axes (in axes coords) | `top_extra_inches=0.25` | Legend needs space between subtitle and chart |
+| Chart with horizontal legend tucked under title | `top_extra_inches=0.30` | Pair with figure-coord legend at `legend_y = 1.0 - 1.05/H` (see §8 Legend). Do **not** anchor the legend in axes coords — that leaves a gap |
 | Chart with annotation flags above bars | `top_extra_inches=0.15` | Annotation arrows extend above data |
 
 ### Anti-patterns to avoid
@@ -573,6 +599,7 @@ Some chart elements protrude beyond the axis box. The helper can't detect them; 
 - **Don't** drop a subtitle without removing the subtitle padding (the helper handles this automatically).
 - **Don't** stack multiple long subtitles. One short subtitle (≤120 chars) or none.
 - **Don't** place the logo bottom-right by default — Amir's preference is no logo on Keyrock charts. If a logo is requested, top-right matches the report style.
+- **Don't** anchor a top-of-chart legend in axes coords (`bbox_to_anchor=(0.5, 1.02)` on `ax.legend`). The legend ends up just above the axis box rather than under the title, leaving a visible gap. Place the legend in figure coords directly — see §8 Legend recipe.
 
 **Usage in templates:**
 ```python
