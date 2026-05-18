@@ -460,90 +460,140 @@ def export_chart(fig, name, output_dir='.', dpi=250, formats=('svg', 'png', 'pdf
 
 This function replaces manual `ax.set_title()` / `fig.suptitle()` / `fig.text(source)` / `plt.tight_layout()` calls. It positions the title, subtitle, and source at figure level for consistent spacing across all chart types.
 
+**Spacing principle: inches, not fractions.** Institutional charts feel methodical because their padding is physically consistent regardless of figure size. A title that sits 0.4 inches from the top of a 5-inch chart should also sit 0.4 inches from the top of a 12-inch chart. Hard-coded figure-fraction values (the old approach) compress on short charts and balloon on tall ones. The helper below computes all positions from **inch-based padding values** that scale-invariant across chart sizes. Reference: Blockworks Research, Syncracy — both use proportionally consistent padding regardless of which deliverable a chart is built for.
+
 ```python
-def layout_chart(fig, title, subtitle=None, source='Source: Keyrock Research'):
-    """Apply Keyrock chart layout with consistent spacing.
+def layout_chart(fig, title, subtitle=None, source='Source: Keyrock Research',
+                 title_align='left',
+                 top_extra_inches=0.0, bottom_extra_inches=0.0):
+    """Apply Keyrock chart layout with inch-based adaptive spacing.
 
-    Call AFTER all chart content is drawn, BEFORE export_chart().
-    Replaces manual title, source, and tight_layout calls.
+    Call AFTER all chart content is drawn, BEFORE add_keyrock_logo() and export_chart().
 
-    Single-axis charts only. For small multiples (subplots(N, M)),
-    use layout_chart_small_multiples() — single-axis spacing collides
-    with per-subplot titles.
+    title_align: 'left' (default, Syncracy/Blockworks style) or 'center'.
+    top_extra_inches: extra padding above chart, for charts whose top elements
+        protrude beyond the axis box (e.g. heatmap column labels at top need +0.3).
+    bottom_extra_inches: extra padding below chart, e.g. for rotated x-axis labels.
+
+    Spacing budget (in inches, scale-invariant):
+        Top margin (figure top to title text top):       0.35
+        Title text height (22pt + leading):              0.40
+        Title-to-subtitle gap:                           0.05
+        Subtitle text height (11pt):                     0.22
+        Subtitle-to-chart gap:                           0.45 (+ top_extra)
+        Chart-to-source gap:                             0.45 (+ bottom_extra)
+        Source text height (10pt):                       0.20
+        Source-to-bottom margin:                         0.30
+
+    Total non-chart space with subtitle: ~2.42"
+    Total non-chart space without subtitle: ~1.70"
+
+    On a 7" tall figure (~1200x700), this leaves the chart 4.5" tall.
+    On a 12" tall figure (square heatmap), it leaves the chart 9.5" tall.
+    On a 5" tall figure (banner), it leaves the chart 2.6" tall.
+
+    The padding stays physically consistent in all three cases.
     """
-    # Title — centred, generous padding from top edge
-    fig.text(0.5, 0.965, title, fontsize=22, weight='bold',
-             color=TEXT_PRIMARY, ha='center', va='top')
+    H = fig.get_figheight()  # inches
 
-    # Subtitle — centred, snug under title, muted
+    # Convert inch values to figure fractions
+    def f(inches): return inches / H
+
+    # Spacing budget
+    TOP_PAD       = f(0.35)
+    TITLE_H       = f(0.40)
+    SUB_GAP       = f(0.05)
+    SUB_H         = f(0.22)
+    CHART_GAP_TOP = f(0.45 + top_extra_inches)
+    CHART_GAP_BOT = f(0.45 + bottom_extra_inches)
+    SOURCE_H      = f(0.20)
+    BOTTOM_PAD    = f(0.30)
+
+    # Title text top position
+    title_y = 1.0 - TOP_PAD
+    title_x = 0.5 if title_align == 'center' else 0.06
+    ha = 'center' if title_align == 'center' else 'left'
+    fig.text(title_x, title_y, title, ha=ha, va='top',
+             fontsize=22, weight='bold', color=TEXT_PRIMARY)
+
+    # Subtitle (if present)
     if subtitle:
-        fig.text(0.5, 0.925, subtitle, fontsize=11, color=TEXT_MUTED,
-                 ha='center', va='top')
+        sub_y = title_y - TITLE_H - SUB_GAP
+        fig.text(title_x, sub_y, subtitle, ha=ha, va='top',
+                 fontsize=11, color=TEXT_MUTED, style='italic')
+        chart_top = sub_y - SUB_H - CHART_GAP_TOP
+    else:
+        chart_top = title_y - TITLE_H - CHART_GAP_TOP
 
-    # Source — bottom-left (no logo on Keyrock charts by default)
+    # Source text top position (at bottom of figure)
+    source_y_top = BOTTOM_PAD + SOURCE_H
     if source:
-        fig.text(0.02, 0.02, source, fontsize=9, color=TEXT_MUTED,
-                 ha='left', va='bottom')
+        fig.text(0.06, source_y_top, source, ha='left', va='top',
+                 fontsize=10, color=TEXT_MUTED, style='italic')
+        chart_bottom = source_y_top + CHART_GAP_BOT
+    else:
+        chart_bottom = BOTTOM_PAD
 
-    # Chart area — generous margins; more top room when subtitle present
-    top = 0.87 if subtitle else 0.91
-    plt.tight_layout(rect=[0.01, 0.08, 0.99, top])
-
-
-def layout_chart_small_multiples(fig, title, source='Source: Keyrock Research'):
-    """Apply Keyrock layout for small-multiples charts (subplots(N, M)).
-
-    Each subplot has its own title that eats vertical space INSIDE the panel area.
-    The single-axis layout_chart() defaults (top=0.91) collide with per-subplot
-    titles. This helper uses tighter top/bottom and a smaller figure title.
-
-    Call AFTER fig.subplots_adjust() with top=0.83, bottom=0.13.
-    """
-    # Smaller figure title (16pt vs 22pt) sized for grids
-    fig.text(0.5, 0.94, title, fontsize=16, weight='bold',
-             color=TEXT_PRIMARY, ha='center', va='top')
-
-    # Source — bottom-left, raised slightly (y=0.05 vs 0.02) to clear
-    # x-tick labels of bottom-row subplots
-    if source:
-        fig.text(0.06, 0.05, source, fontsize=9, color=TEXT_MUTED,
-                 style='italic', ha='left', va='bottom')
-
-
-# Recommended subplots_adjust for 2xN small multiples:
-#   fig.subplots_adjust(left=0.06, right=0.98, top=0.83, bottom=0.13,
-#                       hspace=0.50, wspace=0.22)
+    # Apply chart rect — left/right margins also in inches (W-relative)
+    W = fig.get_figwidth()
+    left = 0.55 / W
+    right = 1.0 - (0.30 / W)
+    plt.tight_layout(rect=[left, chart_bottom, right, chart_top])
 ```
 
-### Spacing standards — quick reference
+### Spacing budget (inch-based)
 
-| Context | Title y | Subtitle y | Chart top | Chart bottom | Source y |
-|---|---|---|---|---|---|
-| **Single-axis chart** | 0.965 | 0.925 | 0.91 (no sub) / 0.87 (with sub) | 0.08 | 0.02 |
-| **Small multiples (2xN)** | 0.94 | n/a | 0.83 | 0.13 | 0.05 |
-| **Diagram / infographic** | 0.94 | 0.88 | n/a (manual layout) | n/a | 0.025 |
+| Element | Padding (inches) | Notes |
+|---|---|---|
+| Top margin (figure top → title) | 0.35 | Consistent across all chart sizes |
+| Title text height | 0.40 | 22pt bold + leading |
+| Title-to-subtitle gap | 0.05 | Tight, just enough separation |
+| Subtitle text height | 0.22 | 11pt italic |
+| Subtitle/title → chart top | 0.45 (+ optional top_extra) | The breathing room above the chart |
+| Chart bottom → source | 0.45 (+ optional bottom_extra) | Mirrors the top gap |
+| Source text height | 0.20 | 10pt italic |
+| Source → figure bottom | 0.30 | Tight to bottom edge |
+| Left margin | 0.55 inches | Scaled from figure width |
+| Right margin | 0.30 inches | Scaled from figure width |
 
-### Anti-patterns to refuse
+### When to use `top_extra_inches` / `bottom_extra_inches`
 
-- **Title at fig y > 0.97** — leaves a dead band above the chart.
-- **Source at fig y < 0.02** — floats too far below the chart.
-- **Logo on data charts** — Keyrock charts have no logo by default. If a logo is requested, place top-right (Blockworks/Syncracy style), never bottom-right.
-- **Big subtitle gaps** — if subtitle is removed, the chart top must move up.
-- **Single-axis spacing on small multiples** — `top=0.91` collides with per-subplot titles. Use the small-multiples helper instead.
-- **`FancyArrowPatch` for diagram arrowheads of varying lengths** — head sizes render inconsistently. Use manual `Polygon` triangles at fixed dimensions.
+Some chart elements protrude beyond the axis box. The helper can't detect them; pass extra inches to give clearance.
+
+| Chart type | Recommended extra | Why |
+|---|---|---|
+| Heatmap with rotated column labels at top | `top_extra_inches=0.30` | Column labels sit above the axis box |
+| Chart with rotated x-axis labels | `bottom_extra_inches=0.20` | Date/category labels extend below axis line |
+| Chart with horizontal legend above axes (in axes coords) | `top_extra_inches=0.25` | Legend needs space between subtitle and chart |
+| Chart with annotation flags above bars | `top_extra_inches=0.15` | Annotation arrows extend above data |
+
+### Anti-patterns to avoid
+
+- **Don't** specify title/source positions in figure fractions directly — they won't translate across chart sizes. Use the helper.
+- **Don't** drop a subtitle without removing the subtitle padding (the helper handles this automatically).
+- **Don't** stack multiple long subtitles. One short subtitle (≤120 chars) or none.
+- **Don't** place the logo bottom-right by default — Amir's preference is no logo on Keyrock charts. If a logo is requested, top-right matches the report style.
 
 **Usage in templates:**
 ```python
-# Single-axis chart:
+# Standard chart
 layout_chart(fig, 'My Title', source='Source: Keyrock Research')
 
-# Small multiples (e.g., 2x4 grid):
-fig, axs = plt.subplots(2, 4, figsize=(13, 6.6), facecolor=BG)
-fig.subplots_adjust(left=0.06, right=0.98, top=0.83, bottom=0.13,
-                    hspace=0.50, wspace=0.22)
-# ... draw each panel ...
-layout_chart_small_multiples(fig, 'Title', source='Source: ...')
+# With subtitle
+layout_chart(fig, 'My Title', subtitle='Additional context.',
+             source='Source: Keyrock Research')
 
+# Centered title (rare — use only when the chart is symmetric e.g. radial/pie)
+layout_chart(fig, 'My Title', title_align='center')
+
+# Heatmap with rotated column labels above axis box
+layout_chart(fig, 'Corridor Matrix', subtitle='...',
+             top_extra_inches=0.30)
+
+# Bar chart with rotated date labels below
+layout_chart(fig, 'Monthly Trend', bottom_extra_inches=0.20)
+
+add_keyrock_logo(fig)
 export_chart(fig, 'chart_name')
 ```
 
