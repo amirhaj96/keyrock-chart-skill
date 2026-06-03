@@ -78,14 +78,13 @@ Write a complete, self-contained Python script that:
 
 1. Includes the full brand setup block from `brand-system.md` section 12 (light mode by default, dark mode if requested)
 2. Includes the `style_axes()` helper from section 13
-3. Includes the `add_keyrock_logo()` function from section 14
-4. Includes the `export_chart()` function from section 15
-5. Uses the appropriate chart template from `chart-templates.md` as the structural starting point
-6. Embeds the user's data inline OR reads from the provided file path
-7. Applies all brand rules: palette, font config, axis styling, number formatting
-8. Adds the Keyrock logo (top-right, always — every Keyrock chart shows the logo; use the correct variant for the colour mode)
-9. Adds a source line: "Source: Keyrock Research" (unless the user specified otherwise)
-10. Exports in SVG (master), PNG, and PDF at 250 DPI
+3. Includes the `export_chart()` function from section 15
+4. Uses the appropriate chart template from `chart-templates.md` as the structural starting point
+5. Embeds the user's data inline OR reads from the provided file path
+6. Applies all brand rules: palette, font config, axis styling, number formatting
+7. **Does NOT add a logo** — `/keyrock-chart` never places the Keyrock logo (do not include or call `add_keyrock_logo()`). Only add one if the user explicitly asks.
+8. Adds a source line: "Source: Keyrock Research" (unless the user specified otherwise)
+9. Exports in SVG (master), PNG, and PDF at 250 DPI
 
 **Never add a subtitle / subheader.** Keyrock charts never carry one. `layout_chart()` has no subtitle parameter. Put any needed context into the title or an in-chart annotation. The title is 17px bold, centred, placed by `layout_chart()`. When a chart has multiple series, pass the legend handles to `layout_chart(legend_handles=...)` rather than calling `ax.legend()`/`fig.legend()` yourself — this places the legend reliably in the band under the title (this was the recurring header/legend spacing problem).
 
@@ -158,7 +157,7 @@ User instructions ALWAYS override brand defaults when explicitly requested. Appl
 | Colour mode | Light |
 | Formats | SVG (master), PNG, PDF |
 | DPI | 250 |
-| Logo | Top-right, always shown, correct variant for mode |
+| Logo | None — `/keyrock-chart` never adds the Keyrock logo (only if user explicitly asks) |
 | Subtitle | Never — Keyrock charts carry no subtitle/subheader |
 | Title | 17px bold, centred, via `layout_chart()` |
 | Source line | "Source: Keyrock Research" |

@@ -232,7 +232,6 @@ ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: format_number(x)))
 
 # --- Layout ---
 layout_chart(fig, '24h Trading Volume by Asset')
-add_keyrock_logo(fig)
 export_chart(fig, 'vertical_bar_single')
 ```
 
@@ -276,7 +275,6 @@ ax.legend(loc='upper left', framealpha=0.8, edgecolor='none', facecolor=BG, font
 
 # --- Layout ---
 layout_chart(fig, 'Quarterly Trading Volume by Venue Type')
-add_keyrock_logo(fig)
 export_chart(fig, 'vertical_bar_grouped')
 ```
 
@@ -348,7 +346,6 @@ ax.set_xlim(0, max(values) * 1.15)
 
 # --- Layout ---
 layout_chart(fig, '24h Spot Volume by Exchange')
-add_keyrock_logo(fig)
 export_chart(fig, 'horizontal_bar_single')
 ```
 
@@ -396,7 +393,6 @@ ax.legend(loc='lower right', framealpha=0.8, edgecolor='none', facecolor=BG, fon
 
 # --- Layout ---
 layout_chart(fig, 'Exchange Volume: Spot vs Derivatives')
-add_keyrock_logo(fig)
 export_chart(fig, 'horizontal_bar_grouped')
 ```
 
@@ -469,7 +465,6 @@ ax.legend(loc='upper left', framealpha=0.8, edgecolor='none', facecolor=BG,
 
 # --- Layout ---
 layout_chart(fig, 'Crypto Market Capitalisation by Segment')
-add_keyrock_logo(fig)
 export_chart(fig, 'stacked_bar_vertical')
 ```
 
@@ -521,7 +516,6 @@ ax.legend(loc='lower right', framealpha=0.8, edgecolor='none', facecolor=BG,
 
 # --- Layout ---
 layout_chart(fig, 'Portfolio Allocation Comparison')
-add_keyrock_logo(fig)
 export_chart(fig, 'stacked_bar_horizontal')
 ```
 
@@ -593,7 +587,6 @@ plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
 
 # --- Layout ---
 layout_chart(fig, 'BTC Weekly Price (2024)')
-add_keyrock_logo(fig)
 export_chart(fig, 'line_single')
 ```
 
@@ -639,7 +632,6 @@ ax.set_xlim(months[0] - timedelta(days=5), months[-1] + timedelta(days=30))
 
 # --- Layout ---
 layout_chart(fig, 'Market Dominance Trends (2024)')
-add_keyrock_logo(fig)
 export_chart(fig, 'line_multi')
 ```
 
@@ -714,7 +706,6 @@ ax.legend(handles[::-1], leg_labels[::-1], loc='upper left',
 
 # --- Layout ---
 layout_chart(fig, 'DeFi TVL by Chain (2024)')
-add_keyrock_logo(fig)
 export_chart(fig, 'area_stacked')
 ```
 
@@ -797,7 +788,6 @@ ax.legend(loc='upper left', framealpha=0.8, edgecolor='none', facecolor=BG, font
 
 # --- Layout ---
 layout_chart(fig, 'Market Cap vs 24h Volume')
-add_keyrock_logo(fig)
 export_chart(fig, 'scatter_plot')
 ```
 
@@ -865,7 +855,6 @@ ax.text(0, 0, '$92B\nTotal TVL', ha='center', va='center',
 
 # --- Layout ---
 layout_chart(fig, 'DeFi TVL by Chain')
-add_keyrock_logo(fig)
 export_chart(fig, 'donut_chart')
 ```
 
@@ -947,7 +936,6 @@ cbar.outline.set_visible(False)
 
 # --- Layout ---
 layout_chart(fig, 'Asset Correlation Matrix (90-Day)')
-add_keyrock_logo(fig)
 export_chart(fig, 'heatmap_correlation')
 ```
 
@@ -1064,7 +1052,6 @@ plt.setp(ax.get_xticklabels(), rotation=30, ha='right')
 
 # --- Layout ---
 layout_chart(fig, 'Revenue Bridge: Q4 2024 to Q1 2025')
-add_keyrock_logo(fig)
 export_chart(fig, 'waterfall')
 ```
 
@@ -1156,7 +1143,6 @@ ax1.legend([bars_legend, line_legend], ['Volume', 'BTC Price'],
 
 # --- Layout ---
 layout_chart(fig, 'BTC Volume and Price (2024)')
-add_keyrock_logo(fig)
 export_chart(fig, 'combo_chart')
 ```
 
@@ -1283,7 +1269,6 @@ ax.legend(handles=legend_patches, loc='lower right', framealpha=0.8,
 
 # --- Layout ---
 layout_chart(fig, 'Global Crypto Regulatory Timeline')
-add_keyrock_logo(fig)
 export_chart(fig, 'timeline_gantt')
 ```
 
@@ -1404,7 +1389,6 @@ for src_id, dst_id, label in connections:
 
 # --- Layout ---
 layout_chart(fig, 'Client Onboarding Process')
-add_keyrock_logo(fig)
 export_chart(fig, 'flowchart')
 ```
 
@@ -1508,7 +1492,6 @@ ax.text(0, 0, center_text, ha='center', va='center',
 
 # --- Layout ---
 layout_chart(fig, 'The Liquidity Flywheel')
-add_keyrock_logo(fig)
 export_chart(fig, 'flywheel')
 ```
 
@@ -1613,7 +1596,6 @@ for i, y in enumerate(y_positions):
 
 # --- Layout ---
 layout_chart(fig, 'Forces Converging on Institutional Crypto Adoption')
-add_keyrock_logo(fig)
 export_chart(fig, 'convergence_diagram')
 ```
 
@@ -1738,7 +1720,6 @@ for i, row in enumerate(rows):
 
 # --- Layout ---
 layout_chart(fig, 'Exchange Scorecard')
-add_keyrock_logo(fig)
 export_chart(fig, 'scorecard')
 ```
 
@@ -1834,7 +1815,6 @@ for i, (ax, metric) in enumerate(zip(axes, metrics)):
 
 # --- Layout ---
 layout_chart(fig, 'Market Making Dashboard')
-add_keyrock_logo(fig)
 export_chart(fig, 'kpi_cards')
 ```
 
@@ -1964,7 +1944,6 @@ for i, (attr, row) in enumerate(zip(attributes, data)):
 
 # --- Layout ---
 layout_chart(fig, 'Market Maker Comparison')
-add_keyrock_logo(fig)
 export_chart(fig, 'comparison_table')
 ```
 
@@ -2044,7 +2023,6 @@ ax.axis('off')
 
 # --- Layout ---
 layout_chart(fig, 'Crypto Market Cap Distribution')
-add_keyrock_logo(fig)
 export_chart(fig, 'treemap')
 ```
 
@@ -2199,7 +2177,6 @@ for j, (pos, label, val) in enumerate(zip(dst_pos, destinations, dst_values)):
 
 # --- Layout ---
 layout_chart(fig, 'Trading Volume Flow: Source to Strategy')
-add_keyrock_logo(fig)
 export_chart(fig, 'sankey_diagram')
 ```
 
@@ -2255,7 +2232,7 @@ Most templates use only `matplotlib` and `numpy` (standard). Special chart types
 3. Grid is subtle (`alpha=0.3`, `linewidth=0.5`)
 4. Both X and Y axis tick/label colours use `TICK_COLOR` (`#9B9B9B`)
 5. `layout_chart(fig, title, ...)` called — handles title, optional legend, source, and axis placement (NO subtitle — never use one)
-6. `add_keyrock_logo(fig)` called after `layout_chart()` — always, top-right
+6. **No logo** — `/keyrock-chart` never adds the Keyrock logo (do not call `add_keyrock_logo`)
 7. `export_chart(fig, name)` called last
 8. All colours come from the brand palette — no hardcoded colours outside the system
 9. No manual `ax.set_title()`, `fig.suptitle()`, `fig.text(source)`, or `plt.tight_layout()` — `layout_chart()` handles all of these

@@ -118,10 +118,8 @@ Located in `~/.claude/keyrock/assets/`:
 
 ### Placement Rules
 
-- **Default position:** Top-right corner (matches the report style — Amir's standing preference, 2026-06-03)
-- **Size:** Approximately 8–10% of chart width
-- **Clear space:** At least 10px from all chart edges
-- **Always embedded** in output. Every Keyrock chart shows the logo — do not omit it.
+- **Do NOT add a logo.** `/keyrock-chart` never places the Keyrock logo on generated charts (Amir's standing preference, 2026-06-03). The `add_keyrock_logo()` helper is kept for manual/one-off use only — do not call it in generated charts.
+- If ever explicitly requested by the user: top-right, ~8–10% of chart width, ≥10px clear space.
 - Logo brand black is `#171717`
 
 ### Mode Selection
@@ -201,7 +199,7 @@ Charts should breathe. Every element (title, chart area, source, logo) needs cle
 | Title block | 0.93–0.97 | Title (centred, 17pt bold) |
 | Legend band (only if a legend) | ~0.87–0.91 | Single frameless legend row under the title |
 | Chart area | 0.10–0.90 (0.85 with legend) | Axes, gridlines, data |
-| Source + logo | 0.00–0.08 | Source line (bottom-left), logo (top-right) |
+| Source | 0.00–0.08 | Source line (bottom-left). No logo. |
 
 ### Key Spacing Values
 
@@ -219,7 +217,6 @@ from matplotlib.patches import Patch
 handles = [Patch(facecolor=COL_A, label='Series A'),
            Patch(facecolor=COL_B, label='Series B')]
 layout_chart(fig, 'My Title', legend_handles=handles)   # legend placed for you
-add_keyrock_logo(fig)
 ```
 
 **Anti-patterns:**
@@ -437,7 +434,8 @@ def style_axes(ax, grid_axis='y'):
 ```python
 def add_keyrock_logo(fig, logo_path=LOGO_PATH, size=0.08, position='top-right', padding=0.02):
     """Add Keyrock logo to chart. size is fraction of figure width.
-    Always call this — every Keyrock chart shows the logo. Default top-right."""
+    NOTE: /keyrock-chart does NOT add a logo by default — do not call this for
+    generated charts. Kept only for manual use if a logo is ever explicitly asked for."""
     try:
         logo = mpimg.imread(logo_path)
         aspect = logo.shape[1] / logo.shape[0]  # width/height
@@ -500,7 +498,7 @@ def layout_chart(fig, title, source='Source: Keyrock Research',
     """Apply Keyrock chart layout (title + optional legend + source) with
     inch-based, deterministic spacing matching the Stablecoin FX charts.
 
-    Call AFTER all chart content is drawn, BEFORE add_keyrock_logo() / export_chart().
+    Call AFTER all chart content is drawn, BEFORE export_chart(). No logo is added.
 
     NO SUBTITLE — by design. Keyrock charts never use one.
 
@@ -593,7 +591,7 @@ Pass extra bottom padding when x-axis labels are rotated or wrap (date/category 
 - **Never add a subtitle / subheader.** The helper has no subtitle param. Do not reintroduce one with `fig.text`.
 - **Don't** place the legend yourself with a hand-tuned `legend_y = 1.0 - 1.05/H` or `bbox_to_anchor=(0.5, 1.02)`. Pass `legend_handles` to `layout_chart` (see §8).
 - **Don't** specify title/source positions in figure fractions directly — use the helper so spacing holds across figure sizes.
-- **Don't** omit the logo. Always call `add_keyrock_logo(fig)` (top-right) after `layout_chart`.
+- **Don't** add a logo. `/keyrock-chart` never places the Keyrock logo on generated charts.
 - **Don't** use a 22pt title — the brand title size is 17pt (handled by the helper).
 
 **Usage in templates:**
@@ -616,8 +614,7 @@ layout_chart(fig, 'My Title', title_align='left')
 # Rotated date labels below the axis
 layout_chart(fig, 'Monthly Trend', bottom_extra_inches=0.20)
 
-add_keyrock_logo(fig)        # always — top-right
-export_chart(fig, 'chart_name')
+export_chart(fig, 'chart_name')   # no logo — /keyrock-chart never adds one
 ```
 
 ---
