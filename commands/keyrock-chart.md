@@ -83,9 +83,11 @@ Write a complete, self-contained Python script that:
 5. Uses the appropriate chart template from `chart-templates.md` as the structural starting point
 6. Embeds the user's data inline OR reads from the provided file path
 7. Applies all brand rules: palette, font config, axis styling, number formatting
-8. Adds the Keyrock logo (bottom-right by default, using the correct variant for the colour mode)
+8. Adds the Keyrock logo (top-right, always — every Keyrock chart shows the logo; use the correct variant for the colour mode)
 9. Adds a source line: "Source: Keyrock Research" (unless the user specified otherwise)
 10. Exports in SVG (master), PNG, and PDF at 250 DPI
+
+**Never add a subtitle / subheader.** Keyrock charts never carry one. `layout_chart()` has no subtitle parameter. Put any needed context into the title or an in-chart annotation. The title is 17px bold, centred, placed by `layout_chart()`. When a chart has multiple series, pass the legend handles to `layout_chart(legend_handles=...)` rather than calling `ax.legend()`/`fig.legend()` yourself — this places the legend reliably in the band under the title (this was the recurring header/legend spacing problem).
 
 Follow chart colour assignment rules from brand-system.md section 7:
 - **Primary blues first:** Use `CHART_COLORS` (8 blue tones) for all standard data series
@@ -156,7 +158,9 @@ User instructions ALWAYS override brand defaults when explicitly requested. Appl
 | Colour mode | Light |
 | Formats | SVG (master), PNG, PDF |
 | DPI | 250 |
-| Logo | Bottom-right, correct variant for mode |
+| Logo | Top-right, always shown, correct variant for mode |
+| Subtitle | Never — Keyrock charts carry no subtitle/subheader |
+| Title | 17px bold, centred, via `layout_chart()` |
 | Source line | "Source: Keyrock Research" |
 | Aspect ratio | ~1200x700 (PDF report full-width) unless context suggests otherwise |
 | File naming | `descriptive_name.{svg,png,pdf}` (e.g., `stablecoin_market_cap.svg`) |

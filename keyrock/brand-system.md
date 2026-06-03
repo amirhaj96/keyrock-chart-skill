@@ -70,8 +70,8 @@ For contexts where directional colour is essential (waterfall charts, KPI trend 
 
 | Element | Size | Weight | Colour |
 |---|---|---|---|
-| Title | 22px | Bold | `#1F1F1F` (TEXT_PRIMARY) |
-| Subtitle | 11px | Regular | `#9B9B9B` (TEXT_MUTED) |
+| Title | 17px | Bold | `#1F1F1F` (TEXT_PRIMARY) |
+| Subtitle | — | — | **Not used.** Keyrock charts never carry a subtitle / subheader (Amir's standing rule, 2026-06-03). Put context in the title or an in-chart annotation. |
 | Axis labels | 12px | Bold | `#1F1F1F` (TEXT_PRIMARY) |
 | Tick labels | 10px | Regular | `#9B9B9B` (both X and Y axis) |
 | Legend | 12px | Bold | `#1F1F1F` (TEXT_PRIMARY) |
@@ -118,10 +118,10 @@ Located in `~/.claude/keyrock/assets/`:
 
 ### Placement Rules
 
-- **Default position:** Bottom-right corner
+- **Default position:** Top-right corner (matches the report style — Amir's standing preference, 2026-06-03)
 - **Size:** Approximately 8–10% of chart width
 - **Clear space:** At least 10px from all chart edges
-- **Always embedded** in output by default
+- **Always embedded** in output. Every Keyrock chart shows the logo — do not omit it.
 - Logo brand black is `#171717`
 
 ### Mode Selection
@@ -192,54 +192,45 @@ Colours are assigned in this strict priority order:
 
 ### Spacing Philosophy
 
-Charts should breathe. Every element (title, subtitle, chart area, source, logo) needs clear separation. The layout uses figure-level coordinates so spacing is consistent regardless of axes content.
+Charts should breathe. Every element (title, chart area, source, logo) needs clear separation. **There is no subtitle.** `layout_chart()` (§16) places everything in inch-based, scale-invariant positions — do not hand-place title/source in figure fractions.
 
-### Layout Zones (figure-relative, 0–1 coordinates)
+### Layout Zones (figure-relative, indicative — `layout_chart` computes exact positions in inches)
 
 | Zone | Y range | Contents |
 |---|---|---|
-| Title block | 0.92–0.97 | Title (centred) + optional subtitle |
-| Chart area (no subtitle) | 0.08–0.91 | Axes, gridlines, legend, data |
-| Chart area (with subtitle) | 0.08–0.87 | Axes, gridlines, legend, data |
-| Source + logo | 0.00–0.08 | Source line (bottom-left), logo (bottom-right) |
+| Title block | 0.93–0.97 | Title (centred, 17pt bold) |
+| Legend band (only if a legend) | ~0.87–0.91 | Single frameless legend row under the title |
+| Chart area | 0.10–0.90 (0.85 with legend) | Axes, gridlines, data |
+| Source + logo | 0.00–0.08 | Source line (bottom-left), logo (top-right) |
 
 ### Key Spacing Values
 
-- **Title:** `fig.text(0.5, 0.965, ..., ha='center', va='top')` — 3.5% from top, centred
-- **Subtitle:** `fig.text(0.5, 0.925, ..., ha='center', va='top')` — snug under title, centred
-- **Source:** `fig.text(0.02, 0.02, ..., ha='left', va='bottom')` — bottom-left
-- **Chart rect (no subtitle):** `tight_layout(rect=[0.01, 0.08, 0.99, 0.91])`
-- **Chart rect (with subtitle):** `tight_layout(rect=[0.01, 0.08, 0.99, 0.87])`
+Handled entirely by `layout_chart()` (§16) — title 0.40" from top, optional legend row beneath, source bottom-left, axes pinned with `fig.subplots_adjust`. Do not reproduce these by hand.
 
 ### Legend
 
-- 12px, Bold
-- Use **circle markers** for categorical legends: `Line2D([0],[0], marker='o', color='w', markerfacecolor=col, markersize=10, label=r)`. Filled `Patch` rectangles read as bar/area-chart legends and look wrong on scatter plots — use circles when each row maps to a scatter point.
-- Placement varies by chart type (refer to `chart-templates.md` for specifics)
-
-#### Top-of-chart legends: use figure coords, not axes coords
-
-When a categorical legend sits above the axes (the common case for scatter plots with region groups, line charts with series colours, etc.), anchor the legend in **figure coordinates** directly under the title. Do not use `ax.legend(..., bbox_to_anchor=(0.5, 1.02))` — that anchors in axes coordinates just above the axis box and leaves a large empty band between the title and the legend, because `layout_chart` reserves the title block at the figure top with its own inch budget.
+- 10.5px, regular-bold
+- Marker style by chart type: **`Patch` rectangles** for bar / stacked-bar / area charts (the series are filled shapes); **circle markers** (`Line2D([0],[0], marker='o', color='w', markerfacecolor=col, markersize=10, label=r)`) for scatter and line charts where each row maps to a point/line.
+- **Let `layout_chart()` place the legend.** Pass your handles as `legend_handles=` (and `legend_ncol=` if you want a specific column count) and the helper drops a single frameless legend row into the band directly beneath the title, with the chart top lowered to make room. This is the only supported way to get a top-of-chart legend.
 
 **Correct pattern:**
 ```python
-# After layout_chart(fig, title, top_extra_inches=0.30) has run:
-H = fig.get_figheight()
-legend_y = 1.0 - (1.05 / H)   # 1.05" below figure top → 0.30" under title baseline
-handles = [Line2D([0],[0], marker='o', color='w', markerfacecolor=c,
-                  markersize=10, label=r) for r, c in REGION_COL.items()]
-fig.legend(handles=handles, loc='center', bbox_to_anchor=(0.5, legend_y),
-           frameon=False, fontsize=11, labelcolor=TEXT_PRIMARY, ncol=5,
-           columnspacing=2.4, handletextpad=0.5)
+from matplotlib.patches import Patch
+handles = [Patch(facecolor=COL_A, label='Series A'),
+           Patch(facecolor=COL_B, label='Series B')]
+layout_chart(fig, 'My Title', legend_handles=handles)   # legend placed for you
+add_keyrock_logo(fig)
 ```
 
-The 1.05" figure-relative anchor decomposes as: 0.35" top pad + 0.40" title height + 0.30" gap = legend centred 1.05" from figure top. Pair this with `top_extra_inches=0.30` in `layout_chart` so the chart axes start ~1.50" from the top, leaving the legend ~0.45" of breathing room above the chart.
-
-**Anti-pattern (this was the bug fixed 2026-05-18):**
+**Anti-patterns:**
 ```python
-# DO NOT do this — leaves the legend floating mid-way between title and chart
+# DO NOT place the legend yourself with a hand-tuned figure-coord anchor —
+# the old legend_y = 1.0 - 1.05/H + top_extra_inches recipe drifted and left
+# gaps. Pass legend_handles to layout_chart instead.
+fig.legend(..., bbox_to_anchor=(0.5, 1.0 - 1.05/H))   # removed 2026-06-03
+
+# DO NOT anchor in axes coords just above the box — leaves a gap under the title.
 ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.02), ...)
-layout_chart(fig, title, top_extra_inches=0.40)  # legend now sits 0.60"+ below title
 ```
 
 ### Aspect Ratios (Context-Adaptive)
@@ -444,8 +435,9 @@ def style_axes(ax, grid_axis='y'):
 ## 14. Logo Placement Pattern (matplotlib)
 
 ```python
-def add_keyrock_logo(fig, logo_path=LOGO_PATH, size=0.08, position='bottom-right', padding=0.02):
-    """Add Keyrock logo to chart. size is fraction of figure width."""
+def add_keyrock_logo(fig, logo_path=LOGO_PATH, size=0.08, position='top-right', padding=0.02):
+    """Add Keyrock logo to chart. size is fraction of figure width.
+    Always call this — every Keyrock chart shows the logo. Default top-right."""
     try:
         logo = mpimg.imread(logo_path)
         aspect = logo.shape[1] / logo.shape[0]  # width/height
@@ -494,143 +486,137 @@ def export_chart(fig, name, output_dir='.', dpi=250, formats=('svg', 'png', 'pdf
 
 ## 16. Chart Layout Helper (matplotlib)
 
-This function replaces manual `ax.set_title()` / `fig.suptitle()` / `fig.text(source)` / `plt.tight_layout()` calls. It positions the title, subtitle, and source at figure level for consistent spacing across all chart types.
+This function replaces manual `ax.set_title()` / `fig.suptitle()` / `fig.text(source)` / `plt.tight_layout()` calls. It positions the **title**, an optional **legend row**, and the **source** at figure level, then pins the axes deterministically. It reproduces the spacing of the Stablecoin FX report charts — the house reference for what good Keyrock spacing looks like.
 
-**Spacing principle: inches, not fractions.** Institutional charts feel methodical because their padding is physically consistent regardless of figure size. A title that sits 0.4 inches from the top of a 5-inch chart should also sit 0.4 inches from the top of a 12-inch chart. Hard-coded figure-fraction values (the old approach) compress on short charts and balloon on tall ones. The helper below computes all positions from **inch-based padding values** that scale-invariant across chart sizes. Reference: Blockworks Research, Syncracy — both use proportionally consistent padding regardless of which deliverable a chart is built for.
+**No subtitle.** Keyrock charts never carry a subtitle/subheader (Amir's standing rule). The helper has no subtitle parameter. Put any context into the title itself or an in-chart annotation.
+
+**Spacing principle: inches, scale-invariant.** Padding is specified in inches so it stays physically consistent regardless of figure size, then converted to figure fractions and applied with `fig.subplots_adjust` (deterministic — the old `tight_layout(rect=...)` + `top_extra_inches` + hand-anchored `legend_y = 1.0 - 1.05/H` combination drifted and was the cause of header/legend gaps). The visual target is the FX charts: compact bold title at the top, a single frameless legend row tucked beneath it when needed, generous-but-even breathing room, muted source bottom-left.
 
 ```python
-def layout_chart(fig, title, subtitle=None, source='Source: Keyrock Research',
-                 title_align='left',
-                 top_extra_inches=0.0, bottom_extra_inches=0.0):
-    """Apply Keyrock chart layout with inch-based adaptive spacing.
+def layout_chart(fig, title, source='Source: Keyrock Research',
+                 legend_handles=None, legend_ncol=None,
+                 title_align='center', title_fontsize=17,
+                 bottom_extra_inches=0.0):
+    """Apply Keyrock chart layout (title + optional legend + source) with
+    inch-based, deterministic spacing matching the Stablecoin FX charts.
 
-    Call AFTER all chart content is drawn, BEFORE add_keyrock_logo() and export_chart().
+    Call AFTER all chart content is drawn, BEFORE add_keyrock_logo() / export_chart().
 
-    title_align: 'left' (default, Syncracy/Blockworks style) or 'center'.
-    top_extra_inches: extra padding above chart, for charts whose top elements
-        protrude beyond the axis box (e.g. heatmap column labels at top need +0.3).
-    bottom_extra_inches: extra padding below chart, e.g. for rotated x-axis labels.
+    NO SUBTITLE — by design. Keyrock charts never use one.
 
-    Spacing budget (in inches, scale-invariant):
-        Top margin (figure top to title text top):       0.35
-        Title text height (22pt + leading):              0.40
-        Title-to-subtitle gap:                           0.05
-        Subtitle text height (11pt):                     0.22
-        Subtitle-to-chart gap:                           0.45 (+ top_extra)
-        Chart-to-source gap:                             0.45 (+ bottom_extra)
-        Source text height (10pt):                       0.20
-        Source-to-bottom margin:                         0.30
+    legend_handles: pass a list of Patch/Line2D handles and the helper places a
+        single frameless legend row in the band directly under the title (and
+        lowers the chart top to fit it). This is the ONLY supported way to add a
+        top-of-chart legend — do not call ax.legend()/fig.legend() yourself.
+    legend_ncol: column count for that legend (defaults to len(legend_handles)).
+    title_align: 'center' (default, FX style) or 'left'.
+    bottom_extra_inches: extra padding below the chart for rotated x labels.
 
-    Total non-chart space with subtitle: ~2.42"
-    Total non-chart space without subtitle: ~1.70"
-
-    On a 7" tall figure (~1200x700), this leaves the chart 4.5" tall.
-    On a 12" tall figure (square heatmap), it leaves the chart 9.5" tall.
-    On a 5" tall figure (banner), it leaves the chart 2.6" tall.
-
-    The padding stays physically consistent in all three cases.
+    Spacing budget (inches, scale-invariant):
+        Top margin (figure top → title):              0.40
+        Title height (17pt bold):                     0.34
+        Title → legend gap:                           0.16  (only if legend)
+        Legend row height:                            0.24  (only if legend)
+        (legend or title) → chart top:                0.40
+        Chart → source gap:                           0.40 (+ bottom_extra)
+        Source height (9pt):                          0.18
+        Source → figure bottom:                       0.30
     """
-    H = fig.get_figheight()  # inches
+    H = fig.get_figheight(); W = fig.get_figwidth()
+    def f(inch): return inch / H
 
-    # Convert inch values to figure fractions
-    def f(inches): return inches / H
+    TOP_PAD   = f(0.40)
+    TITLE_H   = f(0.34)
+    LGND_GAP  = f(0.16)
+    LGND_H    = f(0.24) if legend_handles else 0.0
+    CHART_GAP = f(0.40)
+    SRC_GAP   = f(0.40 + bottom_extra_inches)
+    SRC_H     = f(0.18)
+    BOT_PAD   = f(0.30)
 
-    # Spacing budget
-    TOP_PAD       = f(0.35)
-    TITLE_H       = f(0.40)
-    SUB_GAP       = f(0.05)
-    SUB_H         = f(0.22)
-    CHART_GAP_TOP = f(0.45 + top_extra_inches)
-    CHART_GAP_BOT = f(0.45 + bottom_extra_inches)
-    SOURCE_H      = f(0.20)
-    BOTTOM_PAD    = f(0.30)
-
-    # Title text top position
+    # Title
     title_y = 1.0 - TOP_PAD
     title_x = 0.5 if title_align == 'center' else 0.06
     ha = 'center' if title_align == 'center' else 'left'
     fig.text(title_x, title_y, title, ha=ha, va='top',
-             fontsize=22, weight='bold', color=TEXT_PRIMARY)
+             fontsize=title_fontsize, fontweight='bold', color=TEXT_PRIMARY)
 
-    # Subtitle (if present)
-    if subtitle:
-        sub_y = title_y - TITLE_H - SUB_GAP
-        fig.text(title_x, sub_y, subtitle, ha=ha, va='top',
-                 fontsize=11, color=TEXT_MUTED, style='italic')
-        chart_top = sub_y - SUB_H - CHART_GAP_TOP
+    # Optional legend row, centred in the band under the title
+    if legend_handles:
+        legend_y = title_y - TITLE_H - LGND_GAP - LGND_H / 2
+        fig.legend(handles=legend_handles, loc='center',
+                   bbox_to_anchor=(0.5, legend_y),
+                   ncol=legend_ncol or len(legend_handles), frameon=False,
+                   fontsize=10.5, labelcolor=TEXT_PRIMARY,
+                   columnspacing=2.4, handletextpad=0.6)
+        chart_top = legend_y - LGND_H / 2 - CHART_GAP
     else:
-        chart_top = title_y - TITLE_H - CHART_GAP_TOP
+        chart_top = title_y - TITLE_H - CHART_GAP
 
-    # Source text top position (at bottom of figure)
-    source_y_top = BOTTOM_PAD + SOURCE_H
+    # Source bottom-left
+    src_y = BOT_PAD + SRC_H
     if source:
-        fig.text(0.06, source_y_top, source, ha='left', va='top',
-                 fontsize=10, color=TEXT_MUTED, style='italic')
-        chart_bottom = source_y_top + CHART_GAP_BOT
+        fig.text(0.02, src_y, source, ha='left', va='bottom',
+                 fontsize=9, color=TEXT_MUTED)
+        chart_bottom = src_y + SRC_GAP
     else:
-        chart_bottom = BOTTOM_PAD
+        chart_bottom = BOT_PAD
 
-    # Apply chart rect — left/right margins also in inches (W-relative)
-    W = fig.get_figwidth()
-    left = 0.55 / W
-    right = 1.0 - (0.30 / W)
-    plt.tight_layout(rect=[left, chart_bottom, right, chart_top])
+    # Pin axes deterministically. left/right are inch-scaled; override after the
+    # call for charts that need a wider left margin (e.g. horizontal bars).
+    left = 0.75 / W
+    right = 1.0 - (0.35 / W)
+    fig.subplots_adjust(left=left, right=right, top=chart_top, bottom=chart_bottom)
 ```
 
 ### Spacing budget (inch-based)
 
 | Element | Padding (inches) | Notes |
 |---|---|---|
-| Top margin (figure top → title) | 0.35 | Consistent across all chart sizes |
-| Title text height | 0.40 | 22pt bold + leading |
-| Title-to-subtitle gap | 0.05 | Tight, just enough separation |
-| Subtitle text height | 0.22 | 11pt italic |
-| Subtitle/title → chart top | 0.45 (+ optional top_extra) | The breathing room above the chart |
-| Chart bottom → source | 0.45 (+ optional bottom_extra) | Mirrors the top gap |
-| Source text height | 0.20 | 10pt italic |
+| Top margin (figure top → title) | 0.40 | Consistent across all chart sizes |
+| Title text height | 0.34 | 17pt bold + leading |
+| Title → legend gap | 0.16 | Only when a legend is passed |
+| Legend row height | 0.24 | Only when a legend is passed |
+| (legend or title) → chart top | 0.40 | Breathing room above the chart |
+| Chart bottom → source | 0.40 (+ optional bottom_extra) | Mirrors the top gap |
+| Source text height | 0.18 | 9pt |
 | Source → figure bottom | 0.30 | Tight to bottom edge |
-| Left margin | 0.55 inches | Scaled from figure width |
-| Right margin | 0.30 inches | Scaled from figure width |
+| Left margin | 0.75 inches | Scaled from figure width; widen for horizontal bars |
+| Right margin | 0.35 inches | Scaled from figure width |
 
-### When to use `top_extra_inches` / `bottom_extra_inches`
+### `bottom_extra_inches`
 
-Some chart elements protrude beyond the axis box. The helper can't detect them; pass extra inches to give clearance.
-
-| Chart type | Recommended extra | Why |
-|---|---|---|
-| Heatmap with rotated column labels at top | `top_extra_inches=0.30` | Column labels sit above the axis box |
-| Chart with rotated x-axis labels | `bottom_extra_inches=0.20` | Date/category labels extend below axis line |
-| Chart with horizontal legend tucked under title | `top_extra_inches=0.30` | Pair with figure-coord legend at `legend_y = 1.0 - 1.05/H` (see §8 Legend). Do **not** anchor the legend in axes coords — that leaves a gap |
-| Chart with annotation flags above bars | `top_extra_inches=0.15` | Annotation arrows extend above data |
+Pass extra bottom padding when x-axis labels are rotated or wrap (date/category labels that extend below the axis line). Typical value `0.20`. There is no `top_extra_inches` any more — the legend is handled by `legend_handles`, so nothing else protrudes above the chart.
 
 ### Anti-patterns to avoid
 
-- **Don't** specify title/source positions in figure fractions directly — they won't translate across chart sizes. Use the helper.
-- **Don't** drop a subtitle without removing the subtitle padding (the helper handles this automatically).
-- **Don't** stack multiple long subtitles. One short subtitle (≤120 chars) or none.
-- **Don't** place the logo bottom-right by default — Amir's preference is no logo on Keyrock charts. If a logo is requested, top-right matches the report style.
-- **Don't** anchor a top-of-chart legend in axes coords (`bbox_to_anchor=(0.5, 1.02)` on `ax.legend`). The legend ends up just above the axis box rather than under the title, leaving a visible gap. Place the legend in figure coords directly — see §8 Legend recipe.
+- **Never add a subtitle / subheader.** The helper has no subtitle param. Do not reintroduce one with `fig.text`.
+- **Don't** place the legend yourself with a hand-tuned `legend_y = 1.0 - 1.05/H` or `bbox_to_anchor=(0.5, 1.02)`. Pass `legend_handles` to `layout_chart` (see §8).
+- **Don't** specify title/source positions in figure fractions directly — use the helper so spacing holds across figure sizes.
+- **Don't** omit the logo. Always call `add_keyrock_logo(fig)` (top-right) after `layout_chart`.
+- **Don't** use a 22pt title — the brand title size is 17pt (handled by the helper).
 
 **Usage in templates:**
 ```python
-# Standard chart
-layout_chart(fig, 'My Title', source='Source: Keyrock Research')
+# Standard chart (no legend, single series)
+layout_chart(fig, 'My Title')
 
-# With subtitle
-layout_chart(fig, 'My Title', subtitle='Additional context.',
-             source='Source: Keyrock Research')
+# Custom source
+layout_chart(fig, 'My Title', source='Source: CoinGecko, Keyrock Research')
 
-# Centered title (rare — use only when the chart is symmetric e.g. radial/pie)
-layout_chart(fig, 'My Title', title_align='center')
+# Multi-series chart — let the helper place the legend
+from matplotlib.patches import Patch
+handles = [Patch(facecolor=COL_A, label='Series A'),
+           Patch(facecolor=COL_B, label='Series B')]
+layout_chart(fig, 'My Title', legend_handles=handles)
 
-# Heatmap with rotated column labels above axis box
-layout_chart(fig, 'Corridor Matrix', subtitle='...',
-             top_extra_inches=0.30)
+# Left-aligned title (rare — default is centred, FX style)
+layout_chart(fig, 'My Title', title_align='left')
 
-# Bar chart with rotated date labels below
+# Rotated date labels below the axis
 layout_chart(fig, 'Monthly Trend', bottom_extra_inches=0.20)
 
-add_keyrock_logo(fig)
+add_keyrock_logo(fig)        # always — top-right
 export_chart(fig, 'chart_name')
 ```
 

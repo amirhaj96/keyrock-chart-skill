@@ -44,14 +44,16 @@
 
 ### Title, Source, and Layout — use `layout_chart()`
 
-All charts use the `layout_chart()` helper (defined in `brand-system.md` section 16) for consistent spacing. It handles title, subtitle, source, and `tight_layout` in one call. Do NOT use `ax.set_title()`, `fig.suptitle()`, or manual `fig.text()` for source lines.
+All charts use the `layout_chart()` helper (defined in `brand-system.md` section 16) for consistent spacing. It handles the title, an optional legend row, the source, and axis placement in one call. **There is no subtitle** — Keyrock charts never use one. Do NOT use `ax.set_title()`, `fig.suptitle()`, or manual `fig.text()` for source lines.
 
 ```python
 # Title only (most charts)
 layout_chart(fig, 'Chart Title Here')
 
-# Title + subtitle
-layout_chart(fig, 'Main Title', subtitle='Subtitle text here')
+# Multi-series — let the helper place the legend (see §8)
+from matplotlib.patches import Patch
+handles = [Patch(facecolor=COL_A, label='Series A'), Patch(facecolor=COL_B, label='Series B')]
+layout_chart(fig, 'Main Title', legend_handles=handles)
 
 # Custom source
 layout_chart(fig, 'Chart Title', source='Source: CoinGecko, Keyrock Research')
@@ -1280,8 +1282,7 @@ ax.legend(handles=legend_patches, loc='lower right', framealpha=0.8,
           edgecolor='none', facecolor=BG, fontsize=12, ncol=3, prop={'weight': 'bold'})
 
 # --- Layout ---
-layout_chart(fig, 'Global Crypto Regulatory Timeline',
-             subtitle='Key frameworks and compliance deadlines')
+layout_chart(fig, 'Global Crypto Regulatory Timeline')
 add_keyrock_logo(fig)
 export_chart(fig, 'timeline_gantt')
 ```
@@ -2042,8 +2043,7 @@ ax.set_ylim(0, 8)
 ax.axis('off')
 
 # --- Layout ---
-layout_chart(fig, 'Crypto Market Cap Distribution',
-             subtitle='Total Market Cap: $1.8T')
+layout_chart(fig, 'Crypto Market Cap Distribution')
 add_keyrock_logo(fig)
 export_chart(fig, 'treemap')
 ```
@@ -2254,8 +2254,8 @@ Most templates use only `matplotlib` and `numpy` (standard). Special chart types
 2. Top, right, and left spines removed; bottom spine visible (2px, `X_AXIS_COLOR`)
 3. Grid is subtle (`alpha=0.3`, `linewidth=0.5`)
 4. Both X and Y axis tick/label colours use `TICK_COLOR` (`#9B9B9B`)
-5. `layout_chart(fig, title, ...)` called — handles title, subtitle, source, and `tight_layout`
-6. `add_keyrock_logo(fig)` called after `layout_chart()`
+5. `layout_chart(fig, title, ...)` called — handles title, optional legend, source, and axis placement (NO subtitle — never use one)
+6. `add_keyrock_logo(fig)` called after `layout_chart()` — always, top-right
 7. `export_chart(fig, name)` called last
 8. All colours come from the brand palette — no hardcoded colours outside the system
 9. No manual `ax.set_title()`, `fig.suptitle()`, `fig.text(source)`, or `plt.tight_layout()` — `layout_chart()` handles all of these
